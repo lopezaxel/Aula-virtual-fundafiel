@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StoreProvider, useStore } from './store';
 import { Layout } from './components/Layout';
 import { StudentClassroom } from './views/StudentClassroom';
+import { StudentProfile } from './views/StudentProfile';
 import { CoursePlayer } from './views/CoursePlayer';
 import { AdminDashboard } from './views/AdminDashboard';
 import { AdminCourseManager } from './views/AdminCourseManager';
@@ -13,7 +14,7 @@ import { Users, Loader2 } from 'lucide-react';
 // Wrapper component to use the store context
 const AppContent = () => {
   const { currentUser, loading, session } = useStore();
-  const [currentView, setCurrentView] = useState('classroom');
+  const [currentView, setCurrentView] = useState('my-courses');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   // Redirect to appropriate view based on role when user logs in
@@ -22,7 +23,7 @@ const AppContent = () => {
       if (currentUser.role === 'admin') {
         setCurrentView('admin-dashboard');
       } else {
-        setCurrentView('classroom');
+        setCurrentView('my-courses');
       }
     }
   }, [currentUser]);
@@ -45,7 +46,7 @@ const AppContent = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={48} className="text-blue-600 animate-spin mx-auto mb-4" />
+          <Loader2 size={48} className="text-[#FF5722] animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -60,12 +61,12 @@ const AppContent = () => {
   const renderContent = () => {
     switch (currentView) {
       // Student Views
-      case 'classroom':
-        return <StudentClassroom onCourseSelect={handleCourseSelect} />;
       case 'my-courses':
-        return <StudentClassroom onCourseSelect={handleCourseSelect} />; // Reuse for prototype
+        return <StudentClassroom onCourseSelect={handleCourseSelect} />;
+      case 'my-profile':
+        return <StudentProfile />;
       case 'course-player':
-        return selectedCourseId ? <CoursePlayer courseId={selectedCourseId} onBack={() => navigate('classroom')} /> : <StudentClassroom onCourseSelect={handleCourseSelect} />;
+        return selectedCourseId ? <CoursePlayer courseId={selectedCourseId} onBack={() => navigate('my-courses')} /> : <StudentClassroom onCourseSelect={handleCourseSelect} />;
 
       // Admin Views
       case 'admin-dashboard':

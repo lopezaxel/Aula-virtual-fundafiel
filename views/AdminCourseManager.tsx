@@ -127,7 +127,6 @@ export const AdminCourseManager: React.FC = () => {
       title: 'Nueva Lección',
       description: '',
       videoUrl: '',
-      duration: '00:00',
       materials: []
     };
     setCurrentCourse(prev => ({
@@ -165,7 +164,7 @@ export const AdminCourseManager: React.FC = () => {
           <button
             onClick={handleSaveCourse}
             disabled={isSaving}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="flex items-center px-6 py-2 bg-[#FF5722] text-white rounded-xl hover:bg-[#E64A19] shadow-lg shadow-orange-900/20 transition-all font-bold disabled:opacity-50"
           >
             {isSaving ? (
               <Loader2 size={18} className="mr-2 animate-spin" />
@@ -179,13 +178,13 @@ export const AdminCourseManager: React.FC = () => {
         <div className="flex border-b border-gray-200 px-6">
           <button
             onClick={() => setActiveTab('details')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'details' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'details' ? 'border-[#FF5722] text-[#FF5722]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
           >
             Detalles Generales
           </button>
           <button
             onClick={() => setActiveTab('curriculum')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'curriculum' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'curriculum' ? 'border-[#FF5722] text-[#FF5722]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
           >
             Contenido / Lecciones
           </button>
@@ -200,7 +199,7 @@ export const AdminCourseManager: React.FC = () => {
                   type="text"
                   value={currentCourse.title || ''}
                   onChange={e => setCurrentCourse({ ...currentCourse, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
                   placeholder="Ej: Masterclass de Finanzas"
                 />
               </div>
@@ -210,7 +209,7 @@ export const AdminCourseManager: React.FC = () => {
                   value={currentCourse.description || ''}
                   onChange={e => setCurrentCourse({ ...currentCourse, description: e.target.value })}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
                   placeholder="De qué trata el curso..."
                 />
               </div>
@@ -270,7 +269,7 @@ export const AdminCourseManager: React.FC = () => {
             <div className="max-w-4xl space-y-4">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold text-gray-900 text-lg">Estructura del Curso</h3>
-                <button onClick={addLesson} className="flex items-center text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                <button onClick={addLesson} className="flex items-center text-xs font-black uppercase tracking-widest text-[#FF5722] bg-orange-50 px-4 py-2 rounded-xl hover:bg-orange-100 transition-all active:scale-95">
                   <Plus size={16} className="mr-1" /> Añadir Lección
                 </button>
               </div>
@@ -295,7 +294,7 @@ export const AdminCourseManager: React.FC = () => {
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div className="relative">
                           <Video size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
@@ -304,16 +303,6 @@ export const AdminCourseManager: React.FC = () => {
                             onChange={(e) => updateLesson(index, 'videoUrl', e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                             placeholder="URL del Video (YouTube/Vimeo)"
-                          />
-                        </div>
-                        <div className="relative">
-                          <Loader2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            value={lesson.duration || ''}
-                            onChange={(e) => updateLesson(index, 'duration', e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                            placeholder="Duración (ej: 10:00)"
                           />
                         </div>
                       </div>
@@ -377,9 +366,9 @@ export const AdminCourseManager: React.FC = () => {
         </div>
         <button
           onClick={handleCreateNew}
-          className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm transition-all font-bold"
+          className="flex items-center px-6 py-3 bg-[#FF5722] text-white rounded-2xl hover:bg-[#E64A19] shadow-xl shadow-orange-900/20 transition-all font-black uppercase tracking-widest text-xs"
         >
-          <Plus size={20} className="mr-2" />
+          <Plus size={20} className="mr-2 outline-none" />
           Nuevo Curso
         </button>
       </div>

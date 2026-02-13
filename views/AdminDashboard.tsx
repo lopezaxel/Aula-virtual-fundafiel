@@ -10,13 +10,13 @@ export const AdminDashboard: React.FC = () => {
   }, []);
 
   const StatCard = ({ title, value, icon: Icon, color }: any) => (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center">
-      <div className={`p-3 rounded-lg ${color} mr-4`}>
+    <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-slate-200/50 flex items-center transition-all hover:-translate-y-1">
+      <div className={`p-4 rounded-2xl ${color} mr-5 shadow-lg`}>
         <Icon className="text-white" size={24} />
       </div>
       <div>
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <p className="text-xs font-black text-gray-400 uppercase tracking-widest leading-none mb-2">{title}</p>
+        <p className="text-3xl font-serif font-black text-[#0A1931]">{value}</p>
       </div>
     </div>
   );
@@ -25,27 +25,28 @@ export const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Administrativo</h1>
-          <p className="text-gray-500 text-sm mt-1">Monitorea el crecimiento y rendimiento de tu aula virtual.</p>
+          <h1 className="text-4xl font-serif font-black text-[#0A1931] tracking-tight">Panel Administrativo</h1>
+          <p className="text-gray-500 font-medium mt-2">Gestiona el ecosistema educativo de la Fundación FIEL.</p>
+          <div className="w-20 h-1.5 bg-[#FF5722] mt-4 rounded-full"></div>
         </div>
         <div className="text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1.5 rounded-full uppercase tracking-wider">
           Sincronizado con Supabase
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Alumnos" value={stats.totalStudents} icon={Users} color="bg-blue-600" />
-        <StatCard title="Cursos Activos" value={stats.activeCourses} icon={BookOpen} color="bg-indigo-600" />
-        <StatCard title="Tasa de Finalización" value={`${stats.completionRate}%`} icon={TrendingUp} color="bg-emerald-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total Alumnos" value={stats.totalStudents} icon={Users} color="bg-[#0A1931]" />
+        <StatCard title="Cursos Activos" value={stats.activeCourses} icon={BookOpen} color="bg-[#FF5722]" />
+        <StatCard title="Tasa Finalización" value={`${stats.completionRate}%`} icon={TrendingUp} color="bg-emerald-600" />
         <StatCard title="Total Cursos" value={courses.length} icon={BarChart3} color="bg-amber-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Students Table */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h3 className="font-bold text-gray-900">Alumnos Recientes</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-bold">Ver todos</button>
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
+          <div className="px-8 py-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+            <h3 className="font-serif font-bold text-[#0A1931] text-lg">Alumnos Recientes</h3>
+            <button className="text-xs font-black uppercase tracking-widest text-[#FF5722] hover:text-[#E64A19] transition-colors">Ver todos</button>
           </div>
           <div className="flex-1">
             {allStudents.length > 0 ? (
@@ -57,7 +58,7 @@ export const AdminDashboard: React.FC = () => {
                       <p className="font-semibold text-gray-900 leading-tight">{student.name}</p>
                       <p className="text-xs text-gray-500">Registrado: {new Date(student.joinedAt).toLocaleDateString()}</p>
                     </div>
-                    <div className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded uppercase">Activo</div>
+                    <div className="px-2 py-1 bg-orange-50 text-[#FF5722] text-[10px] font-black rounded-lg uppercase tracking-tighter">Activo</div>
                   </div>
                 ))}
               </div>
@@ -72,9 +73,9 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions / Course Performance */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
-          <div className="px-6 py-4 border-b border-gray-100 bg-white/90 backdrop-blur-sm">
-            <h3 className="font-bold text-gray-900">Rendimiento de Cursos</h3>
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+          <div className="px-8 py-5 border-b border-gray-50 bg-white/90 backdrop-blur-sm">
+            <h3 className="font-serif font-bold text-[#0A1931] text-lg">Rendimiento de Cursos</h3>
           </div>
           <div className="p-6 space-y-4 bg-white/80 backdrop-blur-sm h-full">
             {courses.length > 0 ? (

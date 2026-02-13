@@ -26,6 +26,7 @@ interface StoreContextType {
   // Student management
   allStudents: User[];
   fetchAllStudents: () => Promise<void>;
+  deleteStudent: (userId: string) => Promise<{ error: any }>;
   enrollments: { user_id: string, course_id: string }[];
   fetchEnrollments: () => Promise<void>;
   toggleEnrollment: (userId: string, courseId: string, enroll: boolean) => Promise<void>;
@@ -41,7 +42,10 @@ interface StoreContextType {
   refreshStats: () => Promise<void>;
 
   // Storage
-  uploadFile: (file: File, folder: 'covers' | 'materials') => Promise<{ url: string | null, error: any }>;
+  uploadFile: (file: File, folder: 'covers' | 'materials' | 'avatars') => Promise<{ url: string | null, error: any }>;
+
+  // Profile management
+  updateProfile: (updates: { name?: string, avatar?: string, phone?: string }) => Promise<{ error: any }>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -110,6 +114,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
           email: session?.user?.email || '',
           role: profile.role as Role,
           avatar: profile.avatar || 'https://picsum.photos/id/64/100/100',
+          phone: profile.phone || '',
           joinedAt: profile.created_at
         });
       }
@@ -156,9 +161,10 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       setAllStudents(data.map(p => ({
         id: p.id,
         name: p.name,
-        email: '', // Email not in profiles table for privacy/security without join
+        email: p.email || '',
         role: 'student',
         avatar: p.avatar || 'https://picsum.photos/id/64/100/100',
+        phone: p.phone || '',
         joinedAt: p.created_at
       })));
     }
@@ -283,8 +289,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
             course_id: newCourse.id,
             title: lesson.title,
             description: lesson.description || '',
-            video_url: lesson.videoUrl,
-            duration: lesson.duration
+            video_url: lesson.videoUrl
           })
           .select()
           .single();
@@ -335,8 +340,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
             course_id: updatedCourse.id,
             title: lesson.title,
             description: lesson.description || '',
-            video_url: lesson.videoUrl,
-            duration: lesson.duration
+            video_url: lesson.videoUrl
           })
           .select()
           .single();
@@ -364,7 +368,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
     return { error };
   };
 
-  const uploadFile = async (file: File, folder: 'covers' | 'materials') => {
+  const uploadFile = async (file: File, folder: 'covers' | 'materials' | 'avatars') => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
@@ -380,6 +384,43 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       .getPublicUrl(filePath);
 
     return { url: publicUrl, error: null };
+  };
+
+  const updateProfile = async (updates: { name?: string, avatar?: string, phone?: string }) => {
+    if (!currentUser) return { error: { message: 'No user session' } };
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', currentUser.id);
+
+    if (!updateError) {
+      await loadUserProfile(currentUser.id);
+    }
+
+    return { error: updateError };
+  };
+
+  const deleteStudent = async (userId: string) => {
+    try {
+      // 1. Delete enrollments
+      await supabase.from('enrollments').delete().eq('user_id', userId);
+
+      // 2. Delete lesson progress
+      await supabase.from('lesson_progress').delete().eq('user_id', userId);
+
+      // 3. Delete profile
+      const { error } = await supabase.from('profiles').delete().eq('id', userId);
+
+      if (!error) {
+        setAllStudents(prev => prev.filter(s => s.id !== userId));
+      }
+
+      return { error };
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      return { error: { message: 'Unexpected error' } };
+    }
   };
 
   return (
@@ -404,7 +445,9 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       refreshStats,
       uploadFile,
       lessonProgress,
-      toggleLessonCompletion
+      toggleLessonCompletion,
+      updateProfile,
+      deleteStudent
     }}>
       {children}
     </StoreContext.Provider>

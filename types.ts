@@ -12,7 +12,6 @@ export interface Lesson {
   title: string;
   description?: string;
   videoUrl: string; // YouTube URL
-  duration: string;
   materials: Material[];
   completed?: boolean; // User specific state
 }
@@ -33,6 +32,7 @@ export interface User {
   email: string;
   role: Role;
   avatar: string;
+  phone?: string;
   joinedAt: string;
 }
 
@@ -41,6 +41,7 @@ export interface Profile {
   role: Role;
   name: string;
   avatar: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 }

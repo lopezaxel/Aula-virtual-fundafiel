@@ -19,9 +19,10 @@ export const StudentClassroom: React.FC<StudentClassroomProps> = ({ onCourseSele
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Mi Aula Virtual</h1>
-        <p className="text-gray-500 mt-1">Explora tus cursos y continúa con tu aprendizaje.</p>
+      <div className="mb-10">
+        <h1 className="text-4xl font-serif font-black text-[#0A1931] tracking-tight">Mi Aula Virtual</h1>
+        <p className="text-gray-500 mt-2 font-medium">Explora tus cursos y continúa con tu aprendizaje en Fundación FIEL.</p>
+        <div className="w-20 h-1.5 bg-[#FF5722] mt-4 rounded-full"></div>
       </div>
 
       {availableCourses.length > 0 ? (
@@ -29,7 +30,7 @@ export const StudentClassroom: React.FC<StudentClassroomProps> = ({ onCourseSele
           {availableCourses.map(course => (
             <div
               key={course.id}
-              className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
+              className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-orange-900/10 transition-all duration-500 cursor-pointer flex flex-col h-full"
               onClick={() => onCourseSelect(course.id)}
             >
               <div className="relative h-48 bg-gray-200 overflow-hidden">
@@ -45,7 +46,7 @@ export const StudentClassroom: React.FC<StudentClassroomProps> = ({ onCourseSele
 
               <div className="p-5 flex-1 flex flex-col">
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-serif font-bold text-[#0A1931] mb-2 group-hover:text-[#FF5722] transition-colors leading-tight">
                     {course.title}
                   </h3>
                   <p className="text-sm text-gray-500 line-clamp-2 mb-4">

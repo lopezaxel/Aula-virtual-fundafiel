@@ -1,7 +1,33 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { BookOpen, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import type { Role } from '../types';
+
+// Custom Logo Component for Fundación FIEL
+const Logo = () => (
+    <div className="flex flex-col items-center justify-center mb-6">
+        <svg width="180" height="150" viewBox="0 0 400 350" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-xl hover:scale-105 transition-transform duration-500">
+            {/* Curved Orange Stroke Top */}
+            <path d="M100 80C150 60 250 60 300 80" stroke="#FF5722" strokeWidth="8" strokeLinecap="round" strokeDasharray="5 5" opacity="0.6" />
+
+            {/* Large Orange F */}
+            <text x="50" y="220" fontSize="180" fill="#FF5722" fontWeight="900" style={{ fontFamily: 'Playfair Display, serif' }}>F</text>
+
+            {/* UNDA IEL Text */}
+            <text x="140" y="150" fontSize="70" fill="#0A1931" fontWeight="700" style={{ fontFamily: 'serif' }}>UNDA</text>
+            <text x="140" y="240" fontSize="70" fill="#0A1931" fontWeight="700" style={{ fontFamily: 'serif' }}>IEL</text>
+
+            {/* Open Book Icon Replacement */}
+            <g transform="translate(280, 180) scale(1.5)">
+                <path d="M24 4H6a2 2 0 00-2 2v12a2 2 0 002 2h18" stroke="#0A1931" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4 18l4-4 4 4 4-4 4 4" stroke="#0A1931" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+
+            {/* Curved Orange Stroke Bottom */}
+            <path d="M80 280C140 310 260 310 320 280" stroke="#FF5722" strokeWidth="12" strokeLinecap="round" />
+        </svg>
+    </div>
+);
 
 export const Login: React.FC = () => {
     const { signIn, signUp, loading } = useStore();
@@ -39,8 +65,7 @@ export const Login: React.FC = () => {
                 if (signUpError) {
                     setError(signUpError.message);
                 } else {
-                    setSuccess('¡Cuenta creada exitosamente! Por favor revisa tu email (incluyendo spam) para confirmar tu cuenta. Una vez confirmado, podrás iniciar sesión.');
-                    // Clear form
+                    setSuccess('¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.');
                     setEmail('');
                     setPassword('');
                     setName('');
@@ -48,11 +73,7 @@ export const Login: React.FC = () => {
             } else {
                 const { error: signInError } = await signIn(email, password);
                 if (signInError) {
-                    if (signInError.message.includes('Email not confirmed')) {
-                        setError('Por favor confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
-                    } else {
-                        setError('Email o contraseña incorrectos. Si acabas de registrarte, asegúrate de haber confirmado tu email.');
-                    }
+                    setError('Acceso denegado. Verifica tus credenciales o confirma tu email.');
                 }
             }
         } catch (err) {
@@ -61,142 +82,109 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                {/* Logo and Title */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-                        <BookOpen size={32} className="text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Aula Virtual Fundafiel</h1>
-                    <p className="text-gray-600">
-                        {isSignUp ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
-                    </p>
-                </div>
+        <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-4 selection:bg-orange-100 selection:text-[#FF5722]">
+            {/* Background Accent */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-50 rounded-full blur-3xl opacity-50 -mr-64 -mt-64"></div>
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-slate-100 rounded-full blur-3xl opacity-50 -ml-64 -mb-64"></div>
+            </div>
 
-                {/* Login/Register Card */}
-                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Name field (only for signup) */}
+            <div className="w-full max-w-lg relative z-10">
+                <div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 p-8 sm:p-12 border border-white/50 backdrop-blur-sm">
+                    {/* Brand Section */}
+                    <div className="text-center">
+                        <Logo />
+                        <h1 className="text-4xl font-serif font-black text-[#0A1931] mb-2 tracking-tight">Aula Virtual FIEL</h1>
+                        <p className="text-gray-500 font-medium tracking-wide text-sm mb-10">
+                            {isSignUp ? 'CREA TU PERFIL PROFESIONAL' : 'BIENVENIDO AL ÁREA DE FORMACIÓN'}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {isSignUp && (
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Nombre completo
-                                </label>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre Completo</label>
                                 <input
-                                    id="name"
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                    placeholder="Juan Pérez"
+                                    className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
+                                    placeholder="Ej: Juan Pérez"
                                     disabled={loading}
                                 />
                             </div>
                         )}
 
-                        {/* Email field */}
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                Email
-                            </label>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Institucional</label>
                             <input
-                                id="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
                                 placeholder="tu@email.com"
                                 disabled={loading}
                             />
                         </div>
 
-                        {/* Password field */}
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                                Contraseña
-                            </label>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contraseña</label>
                             <input
-                                id="password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
                                 placeholder="••••••••"
                                 disabled={loading}
                             />
                         </div>
 
-                        {/* Role selector (only for signup) */}
-                        {isSignUp && (
-                            <div>
-                                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tipo de cuenta
-                                </label>
-                                <select
-                                    id="role"
-                                    value={role}
-                                    onChange={(e) => setRole(e.target.value as Role)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                    disabled={loading}
-                                >
-                                    <option value="student">Alumno</option>
-                                    <option value="admin">Administrador</option>
-                                </select>
-                            </div>
-                        )}
-
-                        {/* Error message */}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
-                                <AlertCircle size={20} className="text-red-600 mt-0.5 flex-shrink-0" />
-                                <p className="text-sm text-red-700">{error}</p>
+                            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center space-x-3 animate-in fade-in slide-in-from-top-2">
+                                <AlertCircle size={20} className="text-red-500 shrink-0" />
+                                <p className="text-xs text-red-700 font-bold">{error}</p>
                             </div>
                         )}
 
-                        {/* Success message */}
                         {success && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <p className="text-sm text-green-700">{success}</p>
+                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
+                                <p className="text-xs text-emerald-700 font-bold">{success}</p>
                             </div>
                         )}
 
-                        {/* Submit button */}
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                            className="w-full bg-[#FF5722] text-white font-black uppercase tracking-[0.2em] text-xs py-5 rounded-2xl transition-all shadow-xl shadow-orange-900/20 hover:bg-[#E64A19] hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                         >
                             {loading ? (
-                                <>
-                                    <Loader2 size={20} className="animate-spin" />
-                                    <span>Procesando...</span>
-                                </>
+                                <div className="flex items-center justify-center gap-3">
+                                    <Loader2 size={18} className="animate-spin" />
+                                    <span>Verificando...</span>
+                                </div>
                             ) : (
-                                <span>{isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}</span>
+                                <span>{isSignUp ? 'Empoderar mi futuro' : 'Acceder al Aula'}</span>
                             )}
                         </button>
                     </form>
 
-                    {/* Toggle between login and signup */}
-                    <div className="mt-6 text-center">
+                    <div className="mt-10 text-center border-t border-gray-50 pt-8">
                         <button
                             onClick={() => {
                                 setIsSignUp(!isSignUp);
                                 setError(null);
                                 setSuccess(null);
                             }}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-[#FF5722] transition-colors"
                             disabled={loading}
                         >
-                            {isSignUp ? '¿Ya tienes una cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+                            {isSignUp ? '¿Ya eres parte? Inicia sesión' : '¿Nuevo en la Fundación? Regístrate'}
                         </button>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <p className="text-center text-sm text-gray-500 mt-8">
-                    © 2026 Fundación Fundafiel. Todos los derechos reservados.
+                <p className="text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-12">
+                    Fundación FIEL • Educación e Inclusión Laboral
                 </p>
             </div>
         </div>

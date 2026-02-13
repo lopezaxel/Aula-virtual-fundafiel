@@ -68,14 +68,14 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({ courseId, onBack }) 
               <div>
                 <h1 className="text-3xl font-black text-gray-900 mb-2 leading-tight">{activeLesson.title}</h1>
                 <p className="text-gray-500 font-medium flex items-center gap-2 italic">
-                  {activeLesson.duration} • {course.title}
+                  {course.title}
                 </p>
               </div>
               <button
                 onClick={() => toggleLessonCompletion(activeLesson.id, !isCompleted(activeLesson.id))}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 ${isCompleted(activeLesson.id)
-                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-200'
+                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-200'
                   }`}
               >
                 {isCompleted(activeLesson.id) ? (
@@ -143,8 +143,8 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({ courseId, onBack }) 
                   key={lesson.id}
                   onClick={() => setActiveLesson(lesson)}
                   className={`w-full flex items-start p-4 rounded-xl text-left transition-all ${isActive
-                      ? 'bg-blue-50 border border-blue-100 shadow-sm'
-                      : 'hover:bg-gray-50 border border-transparent'
+                    ? 'bg-blue-50 border border-blue-100 shadow-sm'
+                    : 'hover:bg-gray-50 border border-transparent'
                     }`}
                 >
                   <div className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center text-xs mr-4 flex-shrink-0 font-black transition-colors ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : completed ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'
@@ -156,7 +156,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({ courseId, onBack }) 
                       {lesson.title}
                     </h4>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1 flex items-center">
-                      <Play size={10} className="mr-1 fill-gray-400" /> {lesson.duration}
+                      <Play size={10} className="mr-1 fill-gray-400" /> Lección
                     </p>
                   </div>
                   {completed && !isActive && (
