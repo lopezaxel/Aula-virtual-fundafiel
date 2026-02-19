@@ -14,6 +14,7 @@ interface StoreContextType {
   // Auth methods
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string, name: string, role: Role) => Promise<{ error: AuthError | null }>;
+  createUserByAdmin: (email: string, password: string, name: string, role: Role) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 
   // Course management
@@ -258,6 +259,17 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
     return { error };
   };
 
+  const createUserByAdmin = async (email: string, password: string, name: string, role: Role) => {
+    const { data, error } = await supabase.functions.invoke('create-user', {
+      body: { email, password, name, role }
+    });
+    if (!error) {
+      await fetchAllStudents();
+      await refreshStats();
+    }
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setCurrentUser(null);
@@ -430,6 +442,7 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       loading,
       signIn,
       signUp,
+      createUserByAdmin,
       signOut,
       courses,
       fetchCourses,

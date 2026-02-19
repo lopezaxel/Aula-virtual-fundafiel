@@ -14,16 +14,45 @@ import { Users, Loader2 } from 'lucide-react';
 // Wrapper component to use the store context
 const AppContent = () => {
   const { currentUser, loading, session } = useStore();
-  const [currentView, setCurrentView] = useState('my-courses');
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
-  // Redirect to appropriate view based on role when user logs in
+  // Default view based on role
+  const defaultView = (role?: string) => role === 'admin' ? 'admin-dashboard' : 'my-courses';
+
+  const [currentView, setCurrentView] = useState(() => localStorage.getItem('app_view') || 'my-courses');
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => localStorage.getItem('app_course_id'));
+  // Track which user the persisted view belongs to
+  const [viewOwner, setViewOwner] = useState<string | null>(() => localStorage.getItem('app_view_owner'));
+
+  // Handle persistence
   useEffect(() => {
-    if (currentUser) {
-      if (currentUser.role === 'admin') {
-        setCurrentView('admin-dashboard');
+    localStorage.setItem('app_view', currentView);
+  }, [currentView]);
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      localStorage.setItem('app_course_id', selectedCourseId);
+    } else {
+      localStorage.removeItem('app_course_id');
+    }
+  }, [selectedCourseId]);
+
+  // When user changes (login / logout / different account), reset the view to the correct default
+  useEffect(() => {
+    const userId = currentUser?.id ?? null;
+    if (userId !== viewOwner) {
+      // User changed — clear old state and apply role-based default
+      setViewOwner(userId);
+      setSelectedCourseId(null);
+      if (userId) {
+        const view = defaultView(currentUser?.role);
+        setCurrentView(view);
+        localStorage.setItem('app_view', view);
+        localStorage.setItem('app_view_owner', userId);
       } else {
-        setCurrentView('my-courses');
+        // Logged out — clear everything
+        localStorage.removeItem('app_view');
+        localStorage.removeItem('app_course_id');
+        localStorage.removeItem('app_view_owner');
       }
     }
   }, [currentUser]);

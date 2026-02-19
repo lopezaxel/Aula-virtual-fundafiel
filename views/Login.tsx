@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import type { Role } from '../types';
 
 // Custom Logo Component for Fundación FIEL
@@ -37,6 +37,7 @@ export const Login: React.FC = () => {
     const [name, setName] = useState('');
     const [role, setRole] = useState<Role>('student');
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
     const [success, setSuccess] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +74,7 @@ export const Login: React.FC = () => {
             } else {
                 const { error: signInError } = await signIn(email, password);
                 if (signInError) {
-                    setError('Acceso denegado. Verifica tus credenciales o confirma tu email.');
+                    setError('usuario no existe');
                 }
             }
         } catch (err) {
@@ -101,27 +102,13 @@ export const Login: React.FC = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {isSignUp && (
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre Completo</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
-                                    placeholder="Ej: Juan Pérez"
-                                    disabled={loading}
-                                />
-                            </div>
-                        )}
-
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Institucional</label>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
+                                className={`w-full px-5 py-4 bg-gray-50 border ${error ? 'border-red-300 ring-4 ring-red-500/10' : 'border-gray-100 focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722]'} rounded-2xl outline-none transition-all font-medium`}
                                 placeholder="tu@email.com"
                                 disabled={loading}
                             />
@@ -129,26 +116,29 @@ export const Login: React.FC = () => {
 
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contraseña</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722] outline-none transition-all font-medium"
-                                placeholder="••••••••"
-                                disabled={loading}
-                            />
+                            <div className="relative group">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className={`w-full px-5 py-4 bg-gray-50 border ${error ? 'border-red-300 ring-4 ring-red-500/10' : 'border-gray-100 focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF5722]'} rounded-2xl outline-none transition-all font-medium pr-14`}
+                                    placeholder="••••••••"
+                                    disabled={loading}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-[#FF5722] transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
                         </div>
 
                         {error && (
-                            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center space-x-3 animate-in fade-in slide-in-from-top-2">
+                            <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center space-x-3 anim-slide-from-top">
                                 <AlertCircle size={20} className="text-red-500 shrink-0" />
                                 <p className="text-xs text-red-700 font-bold">{error}</p>
-                            </div>
-                        )}
-
-                        {success && (
-                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
-                                <p className="text-xs text-emerald-700 font-bold">{success}</p>
                             </div>
                         )}
 
@@ -163,24 +153,10 @@ export const Login: React.FC = () => {
                                     <span>Verificando...</span>
                                 </div>
                             ) : (
-                                <span>{isSignUp ? 'Empoderar mi futuro' : 'Acceder al Aula'}</span>
+                                <span>Acceder al Aula</span>
                             )}
                         </button>
                     </form>
-
-                    <div className="mt-10 text-center border-t border-gray-50 pt-8">
-                        <button
-                            onClick={() => {
-                                setIsSignUp(!isSignUp);
-                                setError(null);
-                                setSuccess(null);
-                            }}
-                            className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-[#FF5722] transition-colors"
-                            disabled={loading}
-                        >
-                            {isSignUp ? '¿Ya eres parte? Inicia sesión' : '¿Nuevo en la Fundación? Regístrate'}
-                        </button>
-                    </div>
                 </div>
 
                 <p className="text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-12">

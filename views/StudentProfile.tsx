@@ -157,7 +157,7 @@ export const StudentProfile: React.FC = () => {
 
                     <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
                         {saveSuccess ? (
-                            <div className="flex items-center text-emerald-600 text-sm font-bold animate-in fade-in slide-in-from-left-2">
+                            <div className="flex items-center text-emerald-600 text-sm font-bold anim-slide-from-left">
                                 <CheckCircle size={18} className="mr-2" />
                                 ¡Cambios guardados con éxito!
                             </div>
