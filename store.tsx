@@ -260,14 +260,27 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const createUserByAdmin = async (email: string, password: string, name: string, role: Role) => {
+    // Get the current admin session token to pass explicitly
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { error: { message: 'No hay sesión activa. Por favor, iniciá sesión nuevamente.' } };
+    }
+
     const { data, error } = await supabase.functions.invoke('create-user', {
-      body: { email, password, name, role }
+      body: { email, password, name, role },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
     });
     if (!error) {
+      // Send password reset email so the user can set their own password
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}?view=reset-password`,
+      });
       await fetchAllStudents();
       await refreshStats();
     }
-    return { error };
+    return { error: error ?? data?.error ?? null };
   };
 
   const signOut = async () => {
@@ -415,23 +428,36 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
 
   const deleteStudent = async (userId: string) => {
     try {
-      // 1. Delete enrollments
-      await supabase.from('enrollments').delete().eq('user_id', userId);
-
-      // 2. Delete lesson progress
-      await supabase.from('lesson_progress').delete().eq('user_id', userId);
-
-      // 3. Delete profile
-      const { error } = await supabase.from('profiles').delete().eq('id', userId);
-
-      if (!error) {
-        setAllStudents(prev => prev.filter(s => s.id !== userId));
+      // Get admin session token to authorize the Edge Function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return { error: { message: 'No hay sesión activa.' } };
       }
 
-      return { error };
-    } catch (error) {
-      console.error('Error deleting student:', error);
-      return { error: { message: 'Unexpected error' } };
+      // Call Edge Function which handles full deletion including auth.users
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      if (data?.error) {
+        return { error: { message: data.error } };
+      }
+
+      // Update local state
+      setAllStudents(prev => prev.filter(s => s.id !== userId));
+      await refreshStats();
+
+      return { error: null };
+    } catch (err: any) {
+      console.error('Error deleting student:', err);
+      return { error: { message: err.message || 'Error inesperado al eliminar usuario.' } };
     }
   };
 

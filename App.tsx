@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StoreProvider, useStore } from './store';
+import { supabase } from './lib/supabase';
 import { Layout } from './components/Layout';
 import { StudentClassroom } from './views/StudentClassroom';
 import { StudentProfile } from './views/StudentProfile';
@@ -9,7 +10,8 @@ import { AdminCourseManager } from './views/AdminCourseManager';
 import { AdminStudentManager } from './views/AdminStudentManager';
 import { AdminSettings } from './views/AdminSettings';
 import { Login } from './views/Login';
-import { Users, Loader2 } from 'lucide-react';
+import { ResetPassword } from './views/ResetPassword';
+import { Loader2 } from 'lucide-react';
 
 // Wrapper component to use the store context
 const AppContent = () => {
@@ -20,12 +22,28 @@ const AppContent = () => {
 
   const [currentView, setCurrentView] = useState(() => localStorage.getItem('app_view') || 'my-courses');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => localStorage.getItem('app_course_id'));
-  // Track which user the persisted view belongs to
   const [viewOwner, setViewOwner] = useState<string | null>(() => localStorage.getItem('app_view_owner'));
+
+  // ─── Detect PASSWORD_RECOVERY event from Supabase (triggered when user clicks the reset link) ───
+  // This is the only reliable way to intercept the recovery flow: the SDK processes
+  // the URL hash automatically and fires this event BEFORE our component reads the URL.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, _session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Override any other view and show the password reset panel
+        setCurrentView('reset-password');
+        localStorage.setItem('app_view', 'reset-password');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Handle persistence
   useEffect(() => {
-    localStorage.setItem('app_view', currentView);
+    if (currentView !== 'reset-password') {
+      localStorage.setItem('app_view', currentView);
+    }
   }, [currentView]);
 
   useEffect(() => {
@@ -37,16 +55,19 @@ const AppContent = () => {
   }, [selectedCourseId]);
 
   // When user changes (login / logout / different account), reset the view to the correct default
+  // But NOT if we're in the reset-password flow
   useEffect(() => {
     const userId = currentUser?.id ?? null;
     if (userId !== viewOwner) {
-      // User changed — clear old state and apply role-based default
       setViewOwner(userId);
       setSelectedCourseId(null);
       if (userId) {
-        const view = defaultView(currentUser?.role);
-        setCurrentView(view);
-        localStorage.setItem('app_view', view);
+        // Don't override if we are in the reset password flow
+        if (currentView !== 'reset-password') {
+          const view = defaultView(currentUser?.role);
+          setCurrentView(view);
+          localStorage.setItem('app_view', view);
+        }
         localStorage.setItem('app_view_owner', userId);
       } else {
         // Logged out — clear everything
@@ -82,6 +103,20 @@ const AppContent = () => {
     );
   }
 
+  // ─── Reset Password view: shown OUTSIDE the Layout, without logging in first ───
+  // This handles the case where the user clicks the email link and lands here
+  if (currentView === 'reset-password') {
+    return (
+      <ResetPassword
+        onComplete={() => {
+          // After setting the password, clear the flag and redirect to login
+          localStorage.removeItem('app_view');
+          setCurrentView('my-courses');
+        }}
+      />
+    );
+  }
+
   // Show login if no session
   if (!session || !currentUser) {
     return <Login />;
@@ -102,7 +137,6 @@ const AppContent = () => {
         return <AdminDashboard />;
       case 'admin-courses':
         return <AdminCourseManager />;
-
       case 'calendar':
       case 'support':
         return (

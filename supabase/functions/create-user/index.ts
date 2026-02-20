@@ -1,13 +1,23 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 Deno.serve(async (req) => {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders });
+    }
+
     try {
         const authHeader = req.headers.get("Authorization");
         if (!authHeader) {
             return new Response(JSON.stringify({ error: "No authorization header" }), {
                 status: 401,
-                headers: { "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
@@ -35,7 +45,7 @@ Deno.serve(async (req) => {
         if (userError || !user) {
             return new Response(JSON.stringify({ error: "Invalid token" }), {
                 status: 401,
-                headers: { "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
@@ -48,7 +58,7 @@ Deno.serve(async (req) => {
         if (profileError || profile?.role !== "admin") {
             return new Response(JSON.stringify({ error: "Unauthorized: Admin only" }), {
                 status: 403,
-                headers: { "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
@@ -58,7 +68,7 @@ Deno.serve(async (req) => {
         if (!email || !password || !name || !role) {
             return new Response(JSON.stringify({ error: "Missing fields" }), {
                 status: 400,
-                headers: { "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
@@ -73,7 +83,7 @@ Deno.serve(async (req) => {
         if (createError) {
             return new Response(JSON.stringify({ error: createError.message }), {
                 status: 400,
-                headers: { "Content-Type": "application/json" },
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
@@ -85,12 +95,12 @@ Deno.serve(async (req) => {
 
         return new Response(JSON.stringify({ user: newUser.user }), {
             status: 200,
-            headers: { "Content-Type": "application/json" },
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-    } catch (err) {
+    } catch (err: any) {
         return new Response(JSON.stringify({ error: err.message }), {
             status: 500,
-            headers: { "Content-Type": "application/json" },
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
     }
 });
