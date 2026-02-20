@@ -24,6 +24,7 @@ Deno.serve(async (req) => {
             });
         }
 
+        // Cliente admin: para operaciones privilegiadas (crear usuario, actualizar perfil)
         const supabaseAdmin = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
             }
         );
 
-        // Verify the caller is an admin
+        // Cliente autenticado: para verificar que el llamador es un admin
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -44,9 +45,16 @@ Deno.serve(async (req) => {
             }
         );
 
+        // Cliente público limpio: para enviar el email de recuperación
+        const supabasePublic = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+        );
+
+        // 1. Verificar que el llamador es un admin
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
         if (userError || !user) {
-            return new Response(JSON.stringify({ error: "Invalid token" }), {
+            return new Response(JSON.stringify({ error: "Token inválido o sesión expirada" }), {
                 status: 401,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
@@ -65,7 +73,7 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Process request
+        // 2. Leer datos del nuevo usuario
         const { email, password, name, role } = await req.json();
 
         if (!email || !password || !name || !role) {
@@ -75,7 +83,7 @@ Deno.serve(async (req) => {
             });
         }
 
-        // 1. Crear el usuario con email confirmado y contraseña temporal
+        // 3. Crear el usuario con email confirmado y contraseña temporal
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -90,22 +98,7 @@ Deno.serve(async (req) => {
             });
         }
 
-        // 2. Generar enlace de recuperación de contraseña apuntando a la URL de producción
-        //    Este es el enlace que recibirá el usuario en el correo de bienvenida/invitación
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-            type: "recovery",
-            email,
-            options: {
-                redirectTo: `${SITE_URL}/reset-password`,
-            },
-        });
-
-        if (linkError) {
-            console.error("Error generando el enlace de recuperación:", linkError.message);
-            // No interrumpimos el flujo, el usuario fue creado
-        }
-
-        // 3. Actualizar el perfil con nombre y rol
+        // 4. Actualizar el perfil con nombre y rol
         const { error: updateProfileError } = await supabaseAdmin
             .from("profiles")
             .update({ name, role })
@@ -115,12 +108,20 @@ Deno.serve(async (req) => {
             console.error("Error actualizando perfil:", updateProfileError.message);
         }
 
+        // 5. Enviar email de recuperación de contraseña apuntando a la URL de producción.
+        //    Usamos el cliente público (sin token de usuario) para que Supabase envíe el correo.
+        const { error: resetError } = await supabasePublic.auth.resetPasswordForEmail(email, {
+            redirectTo: `${SITE_URL}/reset-password`,
+        });
+
+        if (resetError) {
+            console.error("Error enviando email de recuperación:", resetError.message);
+            // No interrumpimos: el usuario fue creado correctamente,
+            // el admin puede reenviar el correo manualmente si es necesario.
+        }
+
         return new Response(
-            JSON.stringify({
-                user: newUser.user,
-                // Devolvemos el enlace de reseteo para que el admin pueda compartirlo manualmente si lo necesita
-                resetLink: linkData?.properties?.action_link ?? null,
-            }),
+            JSON.stringify({ user: newUser.user }),
             {
                 status: 200,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },

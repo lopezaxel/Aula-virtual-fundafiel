@@ -260,7 +260,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const createUserByAdmin = async (email: string, password: string, name: string, role: Role) => {
-    // Get the current admin session token to pass explicitly
+    // Refrescar la sesión para asegurar que el access_token esté vigente
+    await supabase.auth.refreshSession();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       return { error: { message: 'No hay sesión activa. Por favor, iniciá sesión nuevamente.' } };
@@ -272,14 +273,15 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
         Authorization: `Bearer ${session.access_token}`,
       },
     });
-    if (!error) {
-      // Send password reset email so the user can set their own password
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}?view=reset-password`,
-      });
+
+    if (!error && !data?.error) {
+      // La función Edge ya genera y envía el enlace de recuperación apuntando a
+      // https://aula.fundacionfiel.com/reset-password. No llamamos a resetPasswordForEmail
+      // desde aquí para evitar que los dos tokens se invaliden entre sí (race condition).
       await fetchAllStudents();
       await refreshStats();
     }
+
     return { error: error ?? data?.error ?? null };
   };
 
