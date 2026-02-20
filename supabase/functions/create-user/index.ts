@@ -6,6 +6,9 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// URL de producción — el enlace del correo apuntará aquí
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://aula.fundacionfiel.com";
+
 Deno.serve(async (req) => {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
@@ -72,7 +75,7 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Create user in Auth
+        // 1. Crear el usuario con email confirmado y contraseña temporal
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -87,16 +90,42 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Profile is usually created by trigger, but we ensure it's correct
+        // 2. Generar enlace de recuperación de contraseña apuntando a la URL de producción
+        //    Este es el enlace que recibirá el usuario en el correo de bienvenida/invitación
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: "recovery",
+            email,
+            options: {
+                redirectTo: `${SITE_URL}/reset-password`,
+            },
+        });
+
+        if (linkError) {
+            console.error("Error generando el enlace de recuperación:", linkError.message);
+            // No interrumpimos el flujo, el usuario fue creado
+        }
+
+        // 3. Actualizar el perfil con nombre y rol
         const { error: updateProfileError } = await supabaseAdmin
             .from("profiles")
             .update({ name, role })
             .eq("id", newUser.user.id);
 
-        return new Response(JSON.stringify({ user: newUser.user }), {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (updateProfileError) {
+            console.error("Error actualizando perfil:", updateProfileError.message);
+        }
+
+        return new Response(
+            JSON.stringify({
+                user: newUser.user,
+                // Devolvemos el enlace de reseteo para que el admin pueda compartirlo manualmente si lo necesita
+                resetLink: linkData?.properties?.action_link ?? null,
+            }),
+            {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+        );
     } catch (err: any) {
         return new Response(JSON.stringify({ error: err.message }), {
             status: 500,
