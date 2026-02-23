@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { Course, Lesson, Material } from '../types';
-import { Plus, Edit2, Trash2, GripVertical, Video, FileText, ChevronRight, X, Save, Loader2, BookOpen, Upload, Paperclip } from 'lucide-react';
+import { Plus, Edit2, Trash2, GripVertical, Video, FileText, X, Save, Loader2, BookOpen, Upload, Paperclip, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const AdminCourseManager: React.FC = () => {
-  const { courses, addCourse, updateCourse, deleteCourse, currentUser, uploadFile } = useStore();
+  const { courses, addCourse, updateCourse, deleteCourse, fetchCourses, currentUser, uploadFile } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentCourse, setCurrentCourse] = useState<Partial<Course>>({});
   const [activeTab, setActiveTab] = useState<'details' | 'curriculum'>('details');
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMaterial, setUploadingMaterial] = useState<number | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [pageError, setPageError] = useState<string | null>(null);
+
+  // Fetch courses explicitly on mount to detect permission/network errors
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setPageLoading(true);
+        setPageError(null);
+        await fetchCourses();
+      } catch (err: any) {
+        setPageError(err?.message || 'No se pudieron cargar los cursos. Verificá tu conexión o permisos.');
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const handleCreateNew = () => {
     setCurrentCourse({
@@ -353,6 +371,38 @@ export const AdminCourseManager: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+    );
+  }
+
+  // ─── Page states ───
+  if (pageLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+        <Loader2 size={40} className="animate-spin text-[#FF5722] mb-3" />
+        <p className="text-sm font-medium">Cargando cursos...</p>
+      </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center px-6">
+        <AlertTriangle size={44} className="text-amber-400 mb-4" />
+        <h2 className="text-lg font-bold text-gray-800 mb-1">No se pudieron cargar los cursos</h2>
+        <p className="text-sm text-gray-500 mb-6 max-w-sm">{pageError}</p>
+        <button
+          onClick={async () => {
+            setPageLoading(true);
+            setPageError(null);
+            try { await fetchCourses(); } catch (e: any) { setPageError(e?.message || 'Error al reintentar'); }
+            finally { setPageLoading(false); }
+          }}
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#FF5722] text-white rounded-xl font-bold hover:bg-[#E64A19] transition-all"
+        >
+          <RefreshCw size={16} />
+          Reintentar
+        </button>
       </div>
     );
   }

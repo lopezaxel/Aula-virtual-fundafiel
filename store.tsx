@@ -132,6 +132,8 @@ export const StoreProvider = ({ children }: { children?: ReactNode }) => {
       .select('*, lessons(*, materials(*))')
       .order('created_at', { ascending: false });
 
+    if (error) throw error;
+
     if (data) {
       setCourses(data.map((c: any) => ({
         id: c.id,

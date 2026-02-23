@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component, ReactNode } from 'react';
 import { StoreProvider, useStore } from './store';
 import { supabase } from './lib/supabase';
 import { Layout } from './components/Layout';
@@ -11,7 +11,54 @@ import { AdminStudentManager } from './views/AdminStudentManager';
 import { AdminSettings } from './views/AdminSettings';
 import { Login } from './views/Login';
 import { ResetPassword } from './views/ResetPassword';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+
+// ─── Error Boundary ───
+// Catches any unhandled JS error inside a child view and shows a
+// friendly recovery screen instead of a blank/white page.
+interface ErrorBoundaryState { hasError: boolean; message: string; }
+class ErrorBoundary extends Component<{ children: ReactNode; onReset: () => void }, ErrorBoundaryState> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error?.message || 'Error desconocido' };
+  }
+  componentDidCatch(error: Error, info: any) {
+    console.error('View crashed:', error, info);
+  }
+  reset() {
+    this.setState({ hasError: false, message: '' });
+    this.props.onReset();
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 text-center px-6">
+          <AlertTriangle size={48} className="text-amber-400 mb-4" />
+          <h2 className="text-lg font-bold text-gray-800 mb-1">Algo salió mal en esta sección</h2>
+          <p className="text-sm text-gray-500 mb-6 max-w-sm">{this.state.message}</p>
+          <button
+            onClick={() => this.reset()}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#FF5722] text-white rounded-xl font-bold hover:bg-[#E64A19] transition-all"
+          >
+            <RefreshCw size={16} />
+            Volver al inicio
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── History-aware navigate helper ───
+// Each navigation pushes a state entry so the browser Back button
+// sends a popstate event that we can intercept and handle inside the app.
+const pushHistory = (view: string) => {
+  window.history.pushState({ view }, '', window.location.pathname);
+};
 
 // Wrapper component to use the store context
 const AppContent = () => {
@@ -37,6 +84,32 @@ const AppContent = () => {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // ─── Browser Back / Forward button support ───
+  // When the user presses the browser Back button, the popstate event fires.
+  // We read the view from the history state and navigate to it internally,
+  // which prevents leaving the SPA entirely.
+  useEffect(() => {
+    // Push an initial history entry so there's always something to go back to
+    // within the app (avoids falling through to an external page).
+    if (!window.history.state?.view) {
+      pushHistory(currentView);
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      const view = e.state?.view;
+      if (view) {
+        setCurrentView(view);
+        localStorage.setItem('app_view', view);
+      } else {
+        // No state in history entry — re-push current view to stay inside the app
+        pushHistory(currentView);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Handle persistence
@@ -78,9 +151,10 @@ const AppContent = () => {
     }
   }, [currentUser]);
 
-  // Simple routing logic
+  // Simple routing logic — also pushes to browser history so Back works
   const navigate = (view: string) => {
     setCurrentView(view);
+    pushHistory(view);
     if (view !== 'course-player') {
       setSelectedCourseId(null);
     }
@@ -122,6 +196,12 @@ const AppContent = () => {
     return <Login />;
   }
 
+  // Navigate back to the default view for this user (used by ErrorBoundary reset)
+  const navigateToDefault = () => {
+    const view = defaultView(currentUser?.role);
+    navigate(view);
+  };
+
   const renderContent = () => {
     switch (currentView) {
       // Student Views
@@ -155,7 +235,9 @@ const AppContent = () => {
 
   return (
     <Layout activeView={currentView} onNavigate={navigate}>
-      {renderContent()}
+      <ErrorBoundary key={currentView} onReset={navigateToDefault}>
+        {renderContent()}
+      </ErrorBoundary>
     </Layout>
   );
 };
