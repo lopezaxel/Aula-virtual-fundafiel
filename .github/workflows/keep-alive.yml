@@ -13,5 +13,4 @@ jobs:
       - name: Ping Supabase Edge Function
         run: |
           curl -i -X POST https://hziqhvbcqvbmllqtoqrb.supabase.co/functions/v1/stay-alive \
-          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
           -H "Content-Type: application/json"
