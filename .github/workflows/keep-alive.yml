@@ -2,8 +2,8 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Run every 6 days at 00:00 UTC
-    - cron: '0 0 */6 * *'
+    # Run every 4 days at 12:00 UTC (well within the 7-day inactivity limit)
+    - cron: '0 12 */4 * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -12,5 +12,9 @@ jobs:
     steps:
       - name: Ping Supabase Edge Function
         run: |
-          curl -i -X POST https://hziqhvbcqvbmllqtoqrb.supabase.co/functions/v1/stay-alive \
-          -H "Content-Type: application/json"
+          curl -f -X POST https://hziqhvbcqvbmllqtoqrb.supabase.co/functions/v1/stay-alive \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Confirm ping succeeded
+        run: echo "Supabase pinged successfully at $(date -u)"
